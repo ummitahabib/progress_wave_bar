@@ -166,90 +166,95 @@ class WaveProgressBar extends StatefulWidget {
     this.backgroundColor = Colors.white,
     required this.width,
     required this.progressPercentage,
-    this.timeInMilliSeconds = 20000,
+    this.timeInMilliSeconds = 2000,
   });
 
   @override
-  WaveProgressBarState createState() {
-    return WaveProgressBarState();
-  }
+  _WaveProgressBarState createState() => _WaveProgressBarState();
 }
 
-class WaveProgressBarState extends State<WaveProgressBar>
+class _WaveProgressBarState extends State<WaveProgressBar>
     with SingleTickerProviderStateMixin {
-  late Animation<double> horizontalAnimation;
   late AnimationController controller;
-  late double begin;
-  late double end;
 
   @override
   void initState() {
-    begin = widget.width;
-    end = 0;
-
     super.initState();
     controller = AnimationController(
       duration: Duration(milliseconds: widget.timeInMilliSeconds),
       vsync: this,
     );
+    controller.repeat(); // Loops the animation
 
-    horizontalAnimation = Tween(begin: begin, end: end).animate(controller)
-      ..addListener(() {
-        setState(() {});
-      });
-    controller.forward();
+    // Add listeners to update the UI when the animation value changes
+    controller.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    controller.dispose(); // Dispose of the animation controller
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> arrayOfBars = <Widget>[];
-    arrayOfBars.add(
-      CustomPaint(
-        painter: BackgroundBarPainter(
-          widthOfContainer: (widget.isHorizontallyAnimated)
-              ? horizontalAnimation.value
-              : widget.width,
-          heightOfContainer: widget.listOfHeights.reduce(max),
-          progressPercentage: widget.progressPercentage,
-          initialColor: widget.initalColor,
-          progressColor: widget.progressColor,
-        ),
-      ),
-    );
-
-    for (int i = 0; i < widget.listOfHeights.length; i++) {
-      final double startPosition =
-          (i * (widget.width / widget.listOfHeights.length)) +
-              horizontalAnimation.value;
-
-      arrayOfBars.add(
-        CustomPaint(
-          painter: SingleBarPainter(
-            startingPosition: startPosition,
-            singleBarWidth: widget.width / widget.listOfHeights.length,
-            maxSeekBarHeight: widget.listOfHeights.reduce(max) + 1,
-            actualSeekBarHeight: widget.listOfHeights[i],
-            heightOfContainer: widget.listOfHeights.reduce(max),
-            backgroundColor: widget.backgroundColor,
-          ),
-        ),
-      );
-    }
-
-    return Center(
-      child: SizedBox(
-        height: widget.listOfHeights.reduce(max),
+    return CustomPaint(
+      painter: WaveProgressPainter(
+        progressPercentage: widget.progressPercentage,
+        listOfHeights: widget.listOfHeights,
         width: widget.width,
-        child: Row(
-          children: arrayOfBars,
-        ),
+        initialColor: widget.initalColor,
+        progressColor: widget.progressColor,
+        backgroundColor: widget.backgroundColor,
+        animationController: controller,
       ),
     );
+  }
+}
+
+class WaveProgressPainter extends CustomPainter {
+  final double progressPercentage;
+  final List<double> listOfHeights;
+  final double width;
+  final Color initialColor;
+  final Color progressColor;
+  final Color backgroundColor;
+  final AnimationController animationController;
+
+  WaveProgressPainter({
+    required this.progressPercentage,
+    required this.listOfHeights,
+    required this.width,
+    required this.initialColor,
+    required this.progressColor,
+    required this.backgroundColor,
+    required this.animationController,
+  }) : super(repaint: animationController);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Calculate the current width based on progressPercentage and animation value
+    double currentWidth = (progressPercentage * width) / 100;
+    double animationValue = animationController.value * currentWidth;
+
+    // Drawing the animated rectangle
+    Paint backgroundPaint = Paint()..color = backgroundColor;
+    Paint progressPaint = Paint()..color = progressColor;
+
+    // Draw background
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, size.height), backgroundPaint);
+
+    // Draw progress bar
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, animationValue, size.height),
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(WaveProgressPainter oldDelegate) {
+    return false;
   }
 }
