@@ -1,10 +1,10 @@
 name: progress_wave_bar
 description: A new Flutter package project.
 version: 0.0.1
-homepage:
+homepage: https://github.com/ummitahabib/progress_wave_bar
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: ">=3.0.6 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
