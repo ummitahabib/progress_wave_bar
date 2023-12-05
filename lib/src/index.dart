@@ -34,7 +34,7 @@ class BackgroundBarPainter extends CustomPainter {
           widthOfContainer,
           heightOfContainer,
         ),
-        Radius.circular(0),
+        const Radius.circular(0),
       ),
       trackPaint,
     );
@@ -46,7 +46,7 @@ class BackgroundBarPainter extends CustomPainter {
           (progressPercentage * widthOfContainer) / 100,
           heightOfContainer,
         ),
-        Radius.circular(0),
+        const Radius.circular(0),
       ),
       progressPaint,
     );
@@ -97,7 +97,7 @@ class SingleBarPainter extends CustomPainter {
           singleBarWidth,
           outerSideHeight / 2,
         ),
-        Radius.circular(0),
+        const Radius.circular(0),
       ),
       aboveAndBelowPaint,
     );
@@ -121,7 +121,7 @@ class SingleBarPainter extends CustomPainter {
           singleBarWidth,
           outerSideHeight / 2,
         ),
-        Radius.circular(0),
+        const Radius.circular(0),
       ),
       aboveAndBelowPaint,
     );
@@ -133,7 +133,7 @@ class SingleBarPainter extends CustomPainter {
           0.2 * singleBarWidth,
           heightOfContainer,
         ),
-        Radius.circular(0),
+        const Radius.circular(0),
       ),
       aboveAndBelowPaint,
     );
@@ -156,7 +156,8 @@ class WaveProgressBar extends StatefulWidget {
   final bool isVerticallyAnimated;
   final bool isHorizontallyAnimated;
 
-  WaveProgressBar({
+  const WaveProgressBar({
+    super.key,
     this.isVerticallyAnimated = true,
     this.isHorizontallyAnimated = true,
     required this.listOfHeights,
@@ -177,15 +178,14 @@ class WaveProgressBar extends StatefulWidget {
 class WaveProgressBarState extends State<WaveProgressBar>
     with SingleTickerProviderStateMixin {
   late Animation<double> horizontalAnimation;
-  late Animation<double> verticalAnimation;
   late AnimationController controller;
   late double begin;
   late double end;
 
   @override
   void initState() {
-    begin = 0;
-    end = widget.width;
+    begin = widget.width;
+    end = 0;
 
     super.initState();
     controller = AnimationController(
@@ -224,22 +224,17 @@ class WaveProgressBarState extends State<WaveProgressBar>
     );
 
     for (int i = 0; i < widget.listOfHeights.length; i++) {
-      verticalAnimation =
-          Tween(begin: 0.0, end: widget.listOfHeights[i]).animate(controller)
-            ..addListener(() {
-              setState(() {});
-            });
-      controller.forward();
+      final double startPosition =
+          (i * (widget.width / widget.listOfHeights.length)) +
+              horizontalAnimation.value;
+
       arrayOfBars.add(
         CustomPaint(
           painter: SingleBarPainter(
-            startingPosition:
-                (i * (widget.width / widget.listOfHeights.length)),
+            startingPosition: startPosition,
             singleBarWidth: widget.width / widget.listOfHeights.length,
             maxSeekBarHeight: widget.listOfHeights.reduce(max) + 1,
-            actualSeekBarHeight: (widget.isVerticallyAnimated)
-                ? verticalAnimation.value
-                : widget.listOfHeights[i],
+            actualSeekBarHeight: widget.listOfHeights[i],
             heightOfContainer: widget.listOfHeights.reduce(max),
             backgroundColor: widget.backgroundColor,
           ),
@@ -248,7 +243,7 @@ class WaveProgressBarState extends State<WaveProgressBar>
     }
 
     return Center(
-      child: Container(
+      child: SizedBox(
         height: widget.listOfHeights.reduce(max),
         width: widget.width,
         child: Row(
